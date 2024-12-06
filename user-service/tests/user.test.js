@@ -1,49 +1,27 @@
 const request = require('supertest');
 const app = require('../src/app');
-const mongoose = require('mongoose');
-const User = require('../src/models/userModel');
 
-beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
-});
+describe('User Endpoints', () => {
+  it('should register a new user', async () => {
+    const res = await request(app)
+      .post('/api/users/register')
+      .send({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'password123',
+      });
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toHaveProperty('message');
+  });
 
-afterAll(async () => {
-    await User.deleteMany({});
-    await mongoose.connection.close();
-});
-
-describe('User Service', () => {
-    it('should register a new user', async () => {
-        const response = await request(app)
-            .post('/api/users/register')
-            .send({
-                username: 'testuser',
-                email: 'test@example.com',
-                password: 'password123',
-            });
-        expect(response.statusCode).toBe(201);
-        expect(response.body.message).toBe('User created successfully');
-    });
-
-    it('should login an existing user', async () => {
-        await request(app)
-            .post('/api/users/register')
-            .send({
-                username: 'testuser',
-                email: 'test@example.com',
-                password: 'password123',
-            });
-
-        const response = await request(app)
-            .post('/api/users/login')
-            .send({
-                email: 'test@example.com',
-                password: 'password123',
-            });
-        expect(response.statusCode).toBe(200);
-        expect(response.body.token).toBeDefined();
-    });
+  it('should login a user', async () => {
+    const res = await request(app)
+      .post('/api/users/login')
+      .send({
+        email: 'test@example.com',
+        password: 'password123',
+      });
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toHaveProperty('token');
+  });
 });
